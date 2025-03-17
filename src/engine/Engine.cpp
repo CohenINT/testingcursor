@@ -6,9 +6,19 @@ Engine::Engine()
     : window(800, 600, "Vulkan Engine"),
       vulkanInstance(window.getWindow()),
       renderer(vulkanInstance, window),
-      lastFrameTime(std::chrono::steady_clock::now()) {}
+      lastFrameTime(0.0f) {
+    
+    // Create player triangle
+    playerTriangle = new Triangle(glm::vec2(400.0f, 500.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    playerTriangle->setPlayer(true);
+    triangles.push_back(playerTriangle);
+}
 
-Engine::~Engine() {}
+Engine::~Engine() {
+    for (auto triangle : triangles) {
+        delete triangle;
+    }
+}
 
 void Engine::run() {
     while (!window.shouldClose()) {
@@ -19,44 +29,84 @@ void Engine::run() {
 }
 
 void Engine::update() {
-    auto currentTime = std::chrono::steady_clock::now();
-    float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count();
+    float currentTime = static_cast<float>(glfwGetTime());
+    float deltaTime = currentTime - lastFrameTime;
     lastFrameTime = currentTime;
 
-    // Update triangle spawn timer
-    triangleSpawnTimer += deltaTime;
-    if (triangleSpawnTimer >= TRIANGLE_SPAWN_INTERVAL) {
-        spawnTriangle();
-        std::cout << "Spawned new triangle. Total triangles: " << triangles.size() << std::endl;
-        triangleSpawnTimer = 0.0f;
+    handleInput();
+    spawnTriangle();
+
+    // Update all triangles except player
+    for (size_t i = 1; i < triangles.size(); ++i) {
+        triangles[i]->update(deltaTime);
     }
 
-    // Update triangle positions
-    for (auto& triangle : triangles) {
-        triangle.update(deltaTime);
+    // Check collisions
+    for (size_t i = 1; i < triangles.size(); ++i) {
+        if (checkCollision(*playerTriangle, *triangles[i])) {
+            triangles[i]->startBlinking();
+        }
     }
 
-    // Remove triangles that have fallen off the screen
-    size_t oldSize = triangles.size();
-    triangles.erase(
-        std::remove_if(triangles.begin(), triangles.end(),
-            [](const Triangle& t) { return t.getPosition().y > 650.0f; }), // Remove when below screen
-        triangles.end()
-    );
-    if (triangles.size() != oldSize) {
-        std::cout << "Removed " << (oldSize - triangles.size()) << " triangles. Remaining: " << triangles.size() << std::endl;
+    // Remove triangles that have fallen off screen
+    auto it = triangles.begin() + 1; // Skip player triangle
+    while (it != triangles.end()) {
+        if ((*it)->getPosition().y > 650.0f) {
+            delete *it;
+            it = triangles.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 
-void Engine::spawnTriangle() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_real_distribution<float> xDist(50.0f, 750.0f); // Spawn across window width
-    static std::uniform_real_distribution<float> colorDist(0.5f, 1.0f); // Brighter colors
+void Engine::handleInput() {
+    if (!playerTriangle) return;
 
-    glm::vec2 position(xDist(gen), 50.0f); // Spawn near top of window
-    glm::vec3 color(colorDist(gen), colorDist(gen), colorDist(gen));
-    triangles.emplace_back(position, color);
-    std::cout << "Spawned triangle at position: (" << position.x << ", " << position.y 
-              << ") with color: (" << color.r << ", " << color.g << ", " << color.b << ")" << std::endl;
+    float moveAmount = moveSpeed * (1.0f / 60.0f); // Assuming 60 FPS
+    glm::vec2 newPos = playerTriangle->getPosition();
+    
+    if (glfwGetKey(window.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS) {
+        newPos.x -= moveAmount;
+    }
+    if (glfwGetKey(window.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        newPos.x += moveAmount;
+    }
+
+    // Keep player within screen bounds
+    newPos.x = std::max(50.0f, std::min(750.0f, newPos.x));
+    
+    // Update player position
+    playerTriangle->setPosition(newPos);
+}
+
+void Engine::spawnTriangle() {
+    static float spawnTimer = 0.0f;
+    static const float SPAWN_INTERVAL = 2.0f;
+    float currentTime = static_cast<float>(glfwGetTime());
+    
+    if (currentTime - spawnTimer >= SPAWN_INTERVAL) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> xDist(50.0f, 750.0f);
+        
+        glm::vec2 position(xDist(gen), 50.0f);
+        glm::vec3 color(0.772577f, 0.577346f, 0.733947f);
+        
+        triangles.push_back(new Triangle(position, color));
+        spawnTimer = currentTime;
+    }
+}
+
+bool Engine::checkCollision(const Triangle& t1, const Triangle& t2) {
+    // Simple circle-based collision detection
+    const float radius = 50.0f; // Increased radius to match triangle size
+    glm::vec2 pos1 = t1.getPosition();
+    glm::vec2 pos2 = t2.getPosition();
+    
+    float dx = pos1.x - pos2.x;
+    float dy = pos1.y - pos2.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    
+    return distance < radius * 2;
 } 

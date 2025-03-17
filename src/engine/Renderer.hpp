@@ -12,7 +12,7 @@ public:
     Renderer(VulkanInstance& vulkan, Window& win);
     ~Renderer();
 
-    void render(const std::vector<Triangle>& triangles);
+    void render(const std::vector<Triangle*>& triangles);
     void waitIdle() { vkDeviceWaitIdle(vulkanInstance.getDevice()); }
 
 private:
@@ -23,7 +23,7 @@ private:
     void createVertexBuffer();
     void createSyncObjects();
     void updateVertexBuffer();
-    void updateTriangles(const std::vector<Triangle>& triangles);
+    void updateTriangles(const std::vector<Triangle*>& triangles);
     VkShaderModule createShaderModule(const std::vector<char>& code);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     void drawFrame();

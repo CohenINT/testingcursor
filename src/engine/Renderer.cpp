@@ -323,10 +323,10 @@ void Renderer::updateVertexBuffer() {
     }
 }
 
-void Renderer::updateTriangles(const std::vector<Triangle>& triangles) {
+void Renderer::updateTriangles(const std::vector<Triangle*>& triangles) {
     vertices.clear();
     for (const auto& triangle : triangles) {
-        auto triangleVertices = triangle.getVertices(triangle.getPosition(), triangle.getColor());
+        auto triangleVertices = triangle->getVertices();
         vertices.insert(vertices.end(), triangleVertices.begin(), triangleVertices.end());
     }
     std::cout << "Updating vertex buffer with " << vertices.size() << " vertices" << std::endl;
@@ -435,7 +435,7 @@ void Renderer::drawFrame() {
     vkWaitForFences(vulkanInstance.getDevice(), 1, &inFlightFence, VK_TRUE, UINT64_MAX);
 }
 
-void Renderer::render(const std::vector<Triangle>& triangles) {
+void Renderer::render(const std::vector<Triangle*>& triangles) {
     updateTriangles(triangles);
     drawFrame();
 } 
