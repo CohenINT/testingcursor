@@ -1,0 +1,10 @@
+G:/repos/engine/build/CMakeFiles/VulkanEngine.dir
+G:/repos/engine/build/CMakeFiles/INSTALL.dir
+G:/repos/engine/build/CMakeFiles/ALL_BUILD.dir
+G:/repos/engine/build/CMakeFiles/ZERO_CHECK.dir
+G:/repos/engine/build/third_party/glfw/CMakeFiles/uninstall.dir
+G:/repos/engine/build/third_party/glfw/CMakeFiles/INSTALL.dir
+G:/repos/engine/build/third_party/glfw/CMakeFiles/ALL_BUILD.dir
+G:/repos/engine/build/third_party/glfw/src/CMakeFiles/glfw.dir
+G:/repos/engine/build/third_party/glfw/src/CMakeFiles/update_mappings.dir
+G:/repos/engine/build/third_party/glfw/src/CMakeFiles/INSTALL.dir

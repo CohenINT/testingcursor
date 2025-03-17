@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Engine Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-glsl.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>Vulkan Engine</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#core-components">Core Components</a></li>
+                <li><a href="#implementation">Implementation</a></li>
+                <li><a href="#design-choices">Design Choices</a></li>
+                <li><a href="#future">Future Improvements</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <section id="overview" class="section">
+                <h2>Overview</h2>
+                <p>This project implements a basic 2D rendering engine using Vulkan, demonstrating fundamental graphics programming concepts and modern C++ practices. The engine features a simple particle system that spawns and animates colored triangles.</p>
+                
+                <div class="features">
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>Vulkan-based rendering pipeline</li>
+                        <li>Modern C++ (C++17) implementation</li>
+                        <li>GLFW window management</li>
+                        <li>Dynamic triangle spawning and animation</li>
+                        <li>Custom shader implementation</li>
+                        <li>Efficient memory management</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="architecture" class="section">
+                <h2>Architecture</h2>
+                <div class="architecture-diagram">
+                    <pre>
+Engine
+├── Window (GLFW)
+├── VulkanInstance
+│   ├── Instance
+│   ├── Physical Device
+│   ├── Logical Device
+│   ├── Swap Chain
+│   └── Command Pool
+└── Renderer
+    ├── Graphics Pipeline
+    ├── Vertex Buffer
+    ├── Shader Modules
+    └── Command Buffers</pre>
+                </div>
+
+                <div class="component-relationships">
+                    <h3>Component Relationships</h3>
+                    <ul>
+                        <li><strong>Engine:</strong> Main application class that coordinates all components</li>
+                        <li><strong>Window:</strong> Handles window creation and input events</li>
+                        <li><strong>VulkanInstance:</strong> Manages Vulkan instance, device, and swap chain</li>
+                        <li><strong>Renderer:</strong> Handles rendering pipeline and drawing operations</li>
+                        <li><strong>Triangle:</strong> Represents a single triangle with position and color</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="core-components" class="section">
+                <h2>Core Components</h2>
+                
+                <div class="component">
+                    <h3>1. Window Management</h3>
+                    <pre><code class="language-cpp">class Window {
+    GLFWwindow* window;
+    int width;
+    int height;
+    std::string title;
+};</code></pre>
+                    <ul>
+                        <li>Uses GLFW for cross-platform window management</li>
+                        <li>Provides a clean interface for window operations</li>
+                        <li>Handles window events and input</li>
+                    </ul>
+                </div>
+
+                <div class="component">
+                    <h3>2. Vulkan Instance</h3>
+                    <pre><code class="language-cpp">class VulkanInstance {
+    VkInstance instance;
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkSwapchainKHR swapChain;
+    // ...
+};</code></pre>
+                    <ul>
+                        <li>Manages Vulkan instance and device creation</li>
+                        <li>Handles device selection and queue management</li>
+                        <li>Creates and manages swap chain for double buffering</li>
+                    </ul>
+                </div>
+
+                <div class="component">
+                    <h3>3. Renderer</h3>
+                    <pre><code class="language-cpp">class Renderer {
+    VkPipeline graphicsPipeline;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    // ...
+};</code></pre>
+                    <ul>
+                        <li>Implements the graphics pipeline</li>
+                        <li>Manages vertex buffers and shader modules</li>
+                        <li>Handles command buffer recording and submission</li>
+                    </ul>
+                </div>
+
+                <div class="component">
+                    <h3>4. Triangle System</h3>
+                    <pre><code class="language-cpp">class Triangle {
+    glm::vec2 position;
+    glm::vec3 color;
+    const float fallSpeed;
+};</code></pre>
+                    <ul>
+                        <li>Represents individual triangles</li>
+                        <li>Handles position updates and vertex generation</li>
+                        <li>Manages color properties</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="implementation" class="section">
+                <h2>Implementation Details</h2>
+
+                <div class="implementation-detail">
+                    <h3>1. Vertex Structure</h3>
+                    <pre><code class="language-cpp">struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+};</code></pre>
+                    <ul>
+                        <li>Uses GLM for vector mathematics</li>
+                        <li>Optimized for memory layout</li>
+                        <li>Supports position and color attributes</li>
+                    </ul>
+                </div>
+
+                <div class="implementation-detail">
+                    <h3>2. Shader Implementation</h3>
+                    <pre><code class="language-glsl">#version 450
+layout(location = 0) in vec2 inPosition;
+layout(location = 1) in vec3 inColor;
+layout(location = 0) out vec3 fragColor;
+
+void main() {
+    vec2 clipPos = vec2(
+        (inPosition.x / 800.0) * 2.0 - 1.0,
+        -((inPosition.y / 600.0) * 2.0 - 1.0)
+    );
+    gl_Position = vec4(clipPos, 0.0, 1.0);
+    fragColor = inColor;
+}</code></pre>
+                    <ul>
+                        <li>Implements screen-to-clip space transformation</li>
+                        <li>Handles color interpolation</li>
+                        <li>Uses modern GLSL version (450)</li>
+                    </ul>
+                </div>
+
+                <div class="implementation-detail">
+                    <h3>3. Memory Management</h3>
+                    <ul>
+                        <li>Uses RAII principles for resource management</li>
+                        <li>Implements proper cleanup in destructors</li>
+                        <li>Handles memory allocation and deallocation safely</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="design-choices" class="section">
+                <h2>Design Choices</h2>
+
+                <div class="design-choice">
+                    <h3>1. Why Vulkan?</h3>
+                    <ul>
+                        <li>Modern, low-level graphics API</li>
+                        <li>Better performance than OpenGL</li>
+                        <li>More explicit control over the graphics pipeline</li>
+                        <li>Better suited for modern graphics applications</li>
+                    </ul>
+                </div>
+
+                <div class="design-choice">
+                    <h3>2. Why C++17?</h3>
+                    <ul>
+                        <li>Modern features like structured bindings</li>
+                        <li>Improved type safety</li>
+                        <li>Better performance characteristics</li>
+                        <li>Rich standard library</li>
+                    </ul>
+                </div>
+
+                <div class="design-choice">
+                    <h3>3. Why GLFW?</h3>
+                    <ul>
+                        <li>Cross-platform window management</li>
+                        <li>Simple and clean API</li>
+                        <li>Good integration with Vulkan</li>
+                        <li>Lightweight and efficient</li>
+                    </ul>
+                </div>
+
+                <div class="design-choice">
+                    <h3>4. Why Triangles?</h3>
+                    <ul>
+                        <li>Simple to implement and understand</li>
+                        <li>Good for demonstrating basic graphics concepts</li>
+                        <li>Easy to extend with more complex shapes</li>
+                        <li>Efficient for rendering</li>
+                    </ul>
+                </div>
+
+                <div class="design-choice">
+                    <h3>5. Why Screen Coordinates?</h3>
+                    <ul>
+                        <li>More intuitive for 2D applications</li>
+                        <li>Easier to work with window dimensions</li>
+                        <li>Simpler collision detection</li>
+                        <li>Better for UI elements</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="future" class="section">
+                <h2>Future Improvements</h2>
+
+                <div class="improvement-category">
+                    <h3>1. Performance Optimizations</h3>
+                    <ul>
+                        <li>Implement instanced rendering</li>
+                        <li>Add vertex buffer pooling</li>
+                        <li>Optimize shader compilation</li>
+                        <li>Add command buffer reuse</li>
+                    </ul>
+                </div>
+
+                <div class="improvement-category">
+                    <h3>2. Feature Additions</h3>
+                    <ul>
+                        <li>Add texture support</li>
+                        <li>Implement sprite batching</li>
+                        <li>Add particle effects</li>
+                        <li>Support for more shapes</li>
+                    </ul>
+                </div>
+
+                <div class="improvement-category">
+                    <h3>3. Architecture Improvements</h3>
+                    <ul>
+                        <li>Add scene graph</li>
+                        <li>Implement component system</li>
+                        <li>Add resource management</li>
+                        <li>Support for multiple render passes</li>
+                    </ul>
+                </div>
+
+                <div class="improvement-category">
+                    <h3>4. Developer Experience</h3>
+                    <ul>
+                        <li>Add logging system</li>
+                        <li>Implement debug visualization</li>
+                        <li>Add configuration system</li>
+                        <li>Improve error handling</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section conclusion">
+                <h2>Conclusion</h2>
+                <p>This project demonstrates a solid foundation for a 2D graphics engine using modern graphics programming techniques. The architecture is modular and extensible, making it suitable for further development and feature additions.</p>
+                <p>The choice of Vulkan, C++17, and GLFW provides a robust foundation for graphics programming, while the triangle-based rendering system offers a simple yet effective way to demonstrate core concepts.</p>
+            </section>
+        </main>
+    </div>
+</body>
+</html> 

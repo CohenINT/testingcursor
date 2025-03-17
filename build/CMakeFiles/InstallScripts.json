@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"G:/repos/engine/build/cmake_install.cmake",
+		"G:/repos/engine/build/third_party/glfw/cmake_install.cmake",
+		"G:/repos/engine/build/third_party/glfw/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,10 @@
+^G:\REPOS\ENGINE\BUILD\CMAKEFILES\89DC6D30EA750971109B9516190A38DB\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SG:/repos/engine -BG:/repos/engine/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file G:/repos/engine/build/VulkanEngine.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
